@@ -103,9 +103,8 @@
                         placeholder: 'https://en.wikipedia.org/wiki/The_Matrix',
                         size: 60,
                         onChange: (evt) => {this.setState({url: evt.target.value})},
-                        style: { }
                     }),
-                    h('button', { style: {}}, 'go'),
+                    h('button', null, 'go'),
                     h('p', {style: {marginTop: 10}}, 'Note: any mediawiki site will work e.g. https://simpsonswiki.com/wiki/Treehouse_of_Horror')
             ]))
         }
