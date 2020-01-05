@@ -67,12 +67,12 @@
         <div id="container">
         </div>
 
-        <script src="jquery-3.3.1.js"></script>
-        <script src="react.development.js" charset="utf-8"></script>
-        <script src="react-dom.development.js" charset="utf-8"></script>
-        <!-- <script src="jquery&#45;3.3.1.min.js"></script> -->
-        <!-- <script src="react.production.min.js" charset="utf&#45;8"></script> -->
-        <!-- <script src="react&#45;dom.production.min.js" charset="utf&#45;8"></script> -->
+        <!-- <script src="jquery&#45;3.3.1.js"></script> -->
+        <!-- <script src="react.development.js" charset="utf&#45;8"></script> -->
+        <!-- <script src="react&#45;dom.development.js" charset="utf&#45;8"></script> -->
+        <script src="jquery-3.3.1.min.js"></script>
+        <script src="react.production.min.js" charset="utf-8"></script>
+        <script src="react-dom.production.min.js" charset="utf-8"></script>
 <script type="text/javascript">
 
     h = React.createElement;
@@ -201,7 +201,9 @@
                 ],
                 case_sensitive: false,
                 regex: '',
+                regex_error: false,
                 loading: true,
+                compiled_regex: new RegExp('', 'gi'),
 
             }
             this.regex_change = this.regex_change.bind(this);
@@ -229,15 +231,20 @@
             })
         }
         regex_change(evt) {
-            this.setState({regex: evt.target.value})
+            var re = evt.target.value;
+            try {
+                if (this.state.case_sensitive) {
+                    var compiled_regex = new RegExp(re, 'g');
+                } else {
+                    var compiled_regex = new RegExp(re, 'ig');
+                }
+                this.setState({regex: re, compiled_regex: compiled_regex, regex_error: false})
+            } catch(e) {
+                this.setState({regex: re, regex_error: true})
+            }
         }
         render() {
-            if (this.state.case_sensitive) {
-                var compiled_regex = new RegExp(this.state.regex, 'g');
-            } else {
-                var compiled_regex = new RegExp(this.state.regex, 'ig');
-            }
-            var results = this.state.page_titles.filter(title => title.search(compiled_regex) !== -1)
+            var results = this.state.page_titles.filter(title => title.search(this.state.compiled_regex) !== -1)
 
 
             var split_slashes = url.split('/') // https://en.wikipedia.org/wiki/The_Matrix
@@ -245,10 +252,10 @@
             return h('div', null, [
                 h('p', {key: 'searching-for', style: {marginBottom: 5}}, chosen_category),
                 h('label', {key: 'label'}, 'Filter by regex: '),
-                h('input', {key: 'search', value: this.state.regex, onChange: this.regex_change}),
+                h('input', {key: 'search', autoFocus: true, value: this.state.regex, onChange: this.regex_change, style: {backgroundColor: this.state.regex_error ? 'red' : 'inherit'}}),
                 h('input', {key: 'case', id: 'case', type: 'checkbox', checked: this.state.case_sensitive, onChange: evt => {this.setState({case_sensitive: !this.state.case_sensitive})}}),
                 h('label', {key: 'case-label', htmlFor: 'case'}, 'case sensitive?'),
-                h('p', {style:{marginTop: 5}}, `showing matches 1-${Math.min(results.length, 300)} of ${results.length} ${this.state.regex.length > 0 ? '(total dataset: '+ this.state.page_titles.length +')' : ''}`),
+                h('p', {style:{marginTop: 5}}, `showing matches 1-${Math.min(results.length, 300)} of ${results.length} ${this.state.regex.length > 0 && !this.state.regex_error ? '(total dataset: '+ this.state.page_titles.length +')' : ''}`),
                 h('ol', {key: 'list'}, this.state.loading ? 'loading...' : results.slice(0,300).map(title => {
                     return h('li', {key: title}, h('a', {href: `${host}/wiki/${title.replace(/\s/g, '_')}`, target:'_blank'}, title))
                 }))
