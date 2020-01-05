@@ -119,7 +119,7 @@
             }
         }
         componentDidMount() {
-            $.getJSON(categoryUrl()).done(json => {
+            var success = json => {
                 var categories = [];
                 try {
                     Object.entries(json.query.pages).forEach(entry => {
@@ -127,12 +127,19 @@
                             categories.push(category.title.replace('Category:', ''))
                         })
                     })
-                    this.setState({categories: categories, loading: false})
+                    this.setState({categories: categories, loading: false, error: ''})
                 } catch(e) {
-                    this.setState({loading: false, error: true})
+                    this.setState({loading: false, error: "error parsing results"})
                 }
-            }).fail((request) => {
+            }
+            var error = request => {
                 this.setState({error: "couldn't access site", loading: false})
+            }
+
+            $.getJSON(categoryUrl()).done(success).fail(request => {
+                error()
+                // try accessing different url to see if api lives there
+                $.getJSON(categoryUrl().replace('/w/api', '/api')).done(success).fail(error)
             })
         }
         render() {
